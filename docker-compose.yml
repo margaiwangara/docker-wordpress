@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  # Database Service
+  mysql-db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    env_file:
+      - ./config/db.env
+    networks:
+      - app-network
+
+  # phpmyadmin
+  mysql-admin:
+    container_name: mysql-admin
+    image: phpmyadmin/phpmyadmin
+    env_file:
+      - ./config/db.env
+    depends_on:
+      - mysql-db
+    ports:
+      - 8001:80
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Wordpress Service
+  wordpress:
+    depends_on:
+      - mysql-db
+    image: wordpress:latest
+    ports:
+      - 8000:80
+    restart: always
+    volumes: ['./:/var/www/html']
+    env_file:
+      - ./config/wp.env
+    networks:
+      - app-network
+
+# volumes
+volumes:
+  db_data:
+    driver: local
+
+# networks
+networks:
+  app-network:
+    driver: bridge
